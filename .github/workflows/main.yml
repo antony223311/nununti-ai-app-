@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Web Assets and Package APK
 
 on:
   push:
@@ -10,37 +10,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: 20
 
     - name: Install Dependencies
-      run: npm install
+      run: npm ci || npm install
 
-    - name: Build Web Assets
+    - name: Build Web Dist
       run: npm run build
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v2
-
-    - name: Build APK with Capacitor/Cordova
+    - name: Package Dist to ZIP
       run: |
-        npx cap init Nununti com.nununti.app --web-dir dist || true
-        npx cap add android || true
-        npx cap sync android || true
-        cd android && ./gradlew assembleDebug
+        cd dist
+        zip -r ../nununti-web-build.zip .
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v3
+    - name: Upload Web Build Asset
+      uses: actions/upload-artifact@v4
       with:
-        name: nununti-app
-        path: android/app/build/outputs/apk/debug/app-debug.apk
+        name: nununti-web-dist
+        path: nununti-web-build.zip
