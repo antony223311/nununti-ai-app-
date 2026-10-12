@@ -1,0 +1,10 @@
+{
+  "name": "Nununti - Bengali AI Voice Assistant",
+  "description": "Advanced Android AI voice assistant featuring an expressive animated Bengali female character, Groq Llama 3 & Whisper integration, hands-free 'Nununti' wake-word detection, lock screen mode, and system actions.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
