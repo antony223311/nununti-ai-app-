@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK with Cordova
 
 on:
   push:
@@ -16,32 +16,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 18
-
-    - name: Install Dependencies
-      run: npm install
-
-    - name: Build Web Project
-      run: npm run build
-
-    - name: Create Capacitor Config & Sync
-      run: |
-        npm install @capacitor/core @capacitor/cli @capacitor/android
-        # Detect dist or build directory automatically
-        WEB_DIR="dist"
-        if [ -d "build" ]; then WEB_DIR="build"; fi
-        
-        cat <<EOF > capacitor.config.json
-        {
-          "appId": "com.nununti.app",
-          "appName": "Nununti",
-          "webDir": "$WEB_DIR",
-          "bundledWebRuntime": false
-        }
-        EOF
-
-        npx cap add android
-        npx cap copy android
+        node-version: 20
 
     - name: Setup Java JDK
       uses: actions/setup-java@v4
@@ -49,14 +24,28 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
 
-    - name: Build Debug APK
-      run: |
-        cd android
-        chmod +x gradlew
-        ./gradlew assembleDebug
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
 
-    - name: Upload APK
+    - name: Install Cordova & Build App
+      run: |
+        npm install -g cordova
+        npm install --force
+        npm run build || true
+        
+        # Determine dist folder
+        BUILD_FOLDER="dist"
+        if [ -d "build" ]; then BUILD_FOLDER="build"; fi
+
+        cordova create cordova_app com.nununti.app Nununti
+        cd cordova_app
+        cordova platform add android
+        rm -rf www/*
+        cp -r ../$BUILD_FOLDER/* www/
+        cordova build android --debug
+
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Nununti-APK
-        path: android/app/build/outputs/apk/debug/app-debug.apk
+        name: Nununti-App-Cordova-APK
+        path: cordova_app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
