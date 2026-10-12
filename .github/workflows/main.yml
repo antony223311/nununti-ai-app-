@@ -21,8 +21,27 @@ jobs:
     - name: Install Dependencies
       run: npm install
 
-    - name: Build Web App
+    - name: Build Web Project
       run: npm run build
+
+    - name: Create Capacitor Config & Sync
+      run: |
+        npm install @capacitor/core @capacitor/cli @capacitor/android
+        # Detect dist or build directory automatically
+        WEB_DIR="dist"
+        if [ -d "build" ]; then WEB_DIR="build"; fi
+        
+        cat <<EOF > capacitor.config.json
+        {
+          "appId": "com.nununti.app",
+          "appName": "Nununti",
+          "webDir": "$WEB_DIR",
+          "bundledWebRuntime": false
+        }
+        EOF
+
+        npx cap add android
+        npx cap copy android
 
     - name: Setup Java JDK
       uses: actions/setup-java@v4
@@ -30,21 +49,14 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
 
-    - name: Setup Capacitor & Android Platform
-      run: |
-        npm install @capacitor/core @capacitor/cli @capacitor/android
-        npx cap init Nununti com.nununti.app --web-dir dist
-        npx cap add android
-        npx cap copy android
-
-    - name: Build Debug APK with Gradle
+    - name: Build Debug APK
       run: |
         cd android
         chmod +x gradlew
         ./gradlew assembleDebug
 
-    - name: Upload APK Artifact
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: Nununti-AI-App-APK
+        name: Nununti-APK
         path: android/app/build/outputs/apk/debug/app-debug.apk
